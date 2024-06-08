@@ -69,6 +69,13 @@ async function run() {
         res.send(result);
     })
 
+    // TRENDING SECTION
+    app.get('/trending', async(req, res)=>{
+        const result = await productCollection.find().sort({"upvote_count":-1}).limit(6).toArray();
+        console.log(result);
+        res.send(result);
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
