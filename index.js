@@ -39,15 +39,23 @@ async function run() {
     })
 
     // REVIEWS API
-    app.get('/products', async(req, res)=>{
-        const result = await productCollection.find().toArray();
+    app.get('/reviews', async(req, res)=>{
+        const result = await reviewCollection.find().toArray();
+        res.send(result);
+    })
+
+    // REVIEW FOR A SPECIFIC PRODUCT
+    app.get('/reviews/:id', async(req, res)=>{
+        const id = req.params.id;
+        const query = {product_Id: id};
+        const result = await reviewCollection.find(query).toArray();
         res.send(result);
     })
 
     // PRODUCT DETAILS PAGE
     app.get('/products/:id', async(req, res)=>{
         const id = req.params.id;
-        const query = {_id: new ObjectId(id)}
+        const query = {_id: new ObjectId(id)};
         const result = await productCollection.findOne(query);
         res.send(result);
     })
@@ -63,6 +71,24 @@ async function run() {
     app.patch('/products/:id', async(req, res)=>{
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)};
+
+        // const action = req.query.action;
+        // console.log('action',action);
+        
+        // if(action==='upvote'){
+        //     console.log('upvote');
+        //     const updatedDoc = {
+        //         $inc: {upvote_count: 1},
+        //     }
+        // }
+        // else if(action==='report'){
+        //     console.log('report')
+        //     const updatedDoc = {
+        //         $set: {reported: true},
+        //     }
+        // }
+        // console.log(updatedDoc);
+
         const updatedDoc = {
             $inc: {upvote_count: 1},
         }
