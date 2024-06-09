@@ -38,6 +38,21 @@ async function run() {
         res.send(result);
     })
 
+    // FEATURED SECTION
+    app.get('/featured', async(req, res)=>{
+      const result = await productCollection.find({featured:true}).sort({"timestamp":-1}).toArray();
+      console.log(result);
+      res.send(result);
+  })
+
+    // TRENDING SECTION
+    app.get('/trending', async(req, res)=>{
+      const result = await productCollection.find().sort({"upvote_count":-1}).limit(6).toArray();
+      console.log(result);
+      res.send(result);
+  })
+
+
     // REVIEWS API
     app.get('/reviews', async(req, res)=>{
         const result = await reviewCollection.find().toArray();
@@ -60,12 +75,6 @@ async function run() {
         res.send(result);
     })
 
-    // FEATURED SECTION
-    app.get('/featured', async(req, res)=>{
-        const result = await productCollection.find({featured:true}).sort({"timestamp":-1}).toArray();
-        console.log(result);
-        res.send(result);
-    })
 
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
@@ -92,13 +101,17 @@ async function run() {
       res.send(result);
   })
 
-    // TRENDING SECTION
-    app.get('/trending', async(req, res)=>{
-        const result = await productCollection.find().sort({"upvote_count":-1}).limit(6).toArray();
-        console.log(result);
-        res.send(result);
-    })
 
+
+  // ADD REVIEW FROM PRODUCT DETAILS PAGE
+  app.post('/reviews', async(req, res)=>{
+    const newReview = req.body;
+
+    const result = await reviewCollection.insertOne(newReview);
+    res.send(result);
+  })
+
+    
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
