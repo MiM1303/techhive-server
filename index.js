@@ -68,26 +68,9 @@ async function run() {
     })
 
     // INCREASE VOTE OF PRODUCT
-    app.patch('/products/:id', async(req, res)=>{
+    app.patch('/products/upvote/:id', async(req, res)=>{
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)};
-
-        // const action = req.query.action;
-        // console.log('action',action);
-        
-        // if(action==='upvote'){
-        //     console.log('upvote');
-        //     const updatedDoc = {
-        //         $inc: {upvote_count: 1},
-        //     }
-        // }
-        // else if(action==='report'){
-        //     console.log('report')
-        //     const updatedDoc = {
-        //         $set: {reported: true},
-        //     }
-        // }
-        // console.log(updatedDoc);
 
         const updatedDoc = {
             $inc: {upvote_count: 1},
@@ -95,6 +78,19 @@ async function run() {
         const result = await productCollection.updateOne(filter, updatedDoc);
         res.send(result);
     })
+
+    // REPORT PRODUCT
+    app.patch('/products/report/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+
+      const updatedDoc = {
+          $set: {'reported': "true"},
+      }
+    
+      const result = await productCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+  })
 
     // TRENDING SECTION
     app.get('/trending', async(req, res)=>{
