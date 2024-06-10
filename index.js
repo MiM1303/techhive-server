@@ -75,6 +75,25 @@ async function run() {
         res.send(result);
     })
 
+    // ALL ACCEPTED PRODUCTS FOR PRODUCTS PAGE
+    app.get('/all-products', async(req, res)=>{
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+
+      console.log('pagination query', req.query);
+      const result = await productCollection.find({status:"accepted"}).skip(page * size).limit(size).toArray();
+      res.send(result);
+    })
+
+    // GETTING THE TOTAL NUMBER/COUNT OF ACCEPTED PRODUCTS FOR PRODUCTS PAGE PAGINATION
+    app.get('/all-products-count', async(req, res)=>{
+      const count = await productCollection.countDocuments({status:"accepted"});
+      res.send({count});
+    })
+
+   
+
+
 
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
