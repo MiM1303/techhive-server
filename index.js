@@ -79,20 +79,62 @@ async function run() {
     app.get('/all-products', async(req, res)=>{
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
+      const search = req.query.search;
+
+      const regex = new RegExp(search, 'i');
+        let query = {
+          product_tags: { $in: [regex] },
+          status: "accepted"
+        }
 
       console.log('pagination query', req.query);
-      const result = await productCollection.find({status:"accepted"}).skip(page * size).limit(size).toArray();
+      const result = await productCollection.find(query).skip(page * size).limit(size).toArray();
       res.send(result);
     })
 
     // GETTING THE TOTAL NUMBER/COUNT OF ACCEPTED PRODUCTS FOR PRODUCTS PAGE PAGINATION
     app.get('/all-products-count', async(req, res)=>{
-      const count = await productCollection.countDocuments({status:"accepted"});
+      const search = req.query.search;
+
+      
+        const regex = new RegExp(search, 'i');
+        let query = {
+          product_tags: { $in: [regex] },
+          status: "accepted"
+        }
+        console.log('query set', query);
+        // const count = await productCollection.countDocuments(query);
+    
+        
+      const count = await productCollection.countDocuments(query);
+      console.log("outside if-else", count)
       res.send({count});
     })
 
    
+     // SEARCHING BY TAG
+     app.get('/all-products/search/:searchText', async(req, res)=>{
+      const searchText = req.params.searchText;
+      console.log(searchText);
 
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+
+      const regex = new RegExp(searchText, 'i');
+
+      // search query
+      const query = {
+        product_tags: { $in: [regex] },
+        status: "accepted"
+      };
+      console.log(query);
+
+      const result = await productCollection.find(query).skip(page * size).limit(size).toArray();
+      // const result = await cursor.toArray();
+
+      console.log(result);
+      res.send(result);
+    })
 
 
     // INCREASE VOTE OF PRODUCT
