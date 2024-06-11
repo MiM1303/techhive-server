@@ -30,6 +30,7 @@ async function run() {
 
     const productCollection = client.db("techhiveDB").collection("products");
     const reviewCollection = client.db("techhiveDB").collection("reviews");
+    const userCollection = client.db("techhiveDB").collection("users");
 
 
     // PRODUCTS API
@@ -51,7 +52,6 @@ async function run() {
       console.log(result);
       res.send(result);
   })
-
 
     // REVIEWS API
     app.get('/reviews', async(req, res)=>{
@@ -75,7 +75,7 @@ async function run() {
         res.send(result);
     })
 
-    // ALL ACCEPTED PRODUCTS FOR PRODUCTS PAGE
+    // GETTING ALL ACCEPTED PRODUCTS OR SEARCHED PRODUCTS FOR ALL PRODUCTS PAGE
     app.get('/all-products', async(req, res)=>{
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
@@ -92,7 +92,7 @@ async function run() {
       res.send(result);
     })
 
-    // GETTING THE TOTAL NUMBER/COUNT OF ACCEPTED PRODUCTS FOR PRODUCTS PAGE PAGINATION
+    // GETTING THE TOTAL NUMBER/COUNT OF ACCEPTED PRODUCTS OR SEARCHED FOR PRODUCTS PAGE PAGINATION
     app.get('/all-products-count', async(req, res)=>{
       const search = req.query.search;
 
@@ -111,31 +111,21 @@ async function run() {
       res.send({count});
     })
 
-   
-     // SEARCHING BY TAG
-     app.get('/all-products/search/:searchText', async(req, res)=>{
-      const searchText = req.params.searchText;
-      console.log(searchText);
-
-      const page = parseInt(req.query.page);
-      const size = parseInt(req.query.size);
-
-      const regex = new RegExp(searchText, 'i');
-
-      // search query
-      const query = {
-        product_tags: { $in: [regex] },
-        status: "accepted"
-      };
-      console.log(query);
-
-      const result = await productCollection.find(query).skip(page * size).limit(size).toArray();
-      // const result = await cursor.toArray();
-
-      console.log(result);
+    // USER API
+    app.get('/users', async(req, res)=>{
+      const result = await userCollection.find().toArray();
       res.send(result);
     })
 
+    // GET USER DATA BY EMAIL
+    app.get('/users/:email', async(req, res)=>{
+      const email = req.params.email;
+      const result = await userCollection.findOne({user_email:email});
+      res.send(result);
+    })
+
+    
+    
 
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
@@ -162,7 +152,18 @@ async function run() {
       res.send(result);
   })
 
-
+  // ADDING USER TO DATABASE WHEN LOGGING IN
+  app.post('/users', async(req, res)=>{
+    const user = req.body;
+    // insert email if user does not exist
+    const query = {user_email:user.user_email};
+    const existingUser = await userCollection.findOne(query);
+    if(existingUser){
+      return res.send({message: 'user already exists', insertedId: null})
+    }
+    const result = await userCollection.insertOne(user);
+    res.send(result);
+  })
 
   // ADD REVIEW FROM PRODUCT DETAILS PAGE
   app.post('/reviews', async(req, res)=>{
@@ -172,7 +173,31 @@ async function run() {
     res.send(result);
   })
 
-    
+    {// SEARCHING BY TAG
+    //  app.get('/all-products/search/:searchText', async(req, res)=>{
+    //   const searchText = req.params.searchText;
+    //   console.log(searchText);
+
+    //   const page = parseInt(req.query.page);
+    //   const size = parseInt(req.query.size);
+
+    //   const regex = new RegExp(searchText, 'i');
+
+    //   // search query
+    //   const query = {
+    //     product_tags: { $in: [regex] },
+    //     status: "accepted"
+    //   };
+    //   console.log(query);
+
+    //   const result = await productCollection.find(query).skip(page * size).limit(size).toArray();
+    //   // const result = await cursor.toArray();
+
+    //   console.log(result);
+    //   res.send(result);
+    // })
+    }
+ 
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
