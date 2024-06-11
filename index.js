@@ -170,10 +170,12 @@ async function run() {
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
         const id = req.params.id;
+        const email = req.query.email;
+        console.log(email);
         const filter = {_id: new ObjectId(id)};
 
         const updatedDoc = {
-            $inc: {upvote_count: 1},
+            $push: {upvote_count: email},
         }
         const result = await productCollection.updateOne(filter, updatedDoc);
         res.send(result);
