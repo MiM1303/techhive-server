@@ -124,8 +124,16 @@ async function run() {
       res.send(result);
     })
 
-    
-    
+   
+
+    // GET PRODUCTS BY EMAIL
+    app.get('/products/email/:email', async(req, res)=>{
+      const email = req.params.email;
+      console.log(email);
+      const result = await productCollection.find({owner_email: email}).toArray();
+      res.send(result);
+    })
+   
 
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
