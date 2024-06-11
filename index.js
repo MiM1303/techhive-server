@@ -133,6 +133,38 @@ async function run() {
       const result = await productCollection.find({owner_email: email}).toArray();
       res.send(result);
     })
+
+    // ADD PRODUCT BY ID FOR UPDATE AND DELETE FROM MY PRODUCTS
+    app.get('/add-product', async(req, res)=>{
+      const products = productCollection.find();
+      const result = await products.toArray();
+      res.send(result);
+    })
+
+    app.get('/add-product/:id', async(req, res)=>{
+      const id = req.params.id;
+      console.log(id);
+      const query = {_id: new ObjectId(id)}
+      const result = await productCollection.findOne(query);
+    res.send(result);
+    })
+
+    // UPDATE FROM MY PRODUCTS
+    app.get('/update-product', async(req, res)=>{
+      const products = productCollection.find();
+      const result = await products.toArray();
+      res.send(result);
+    })
+
+    app.get('/update-product/:id', async(req, res)=>{
+      console.log(req.params.id);
+      const id = req.params.id;
+      console.log('printing from server', id);
+      const query = {_id: new ObjectId(id)}
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    })
+
    
 
     // INCREASE VOTE OF PRODUCT
@@ -160,6 +192,28 @@ async function run() {
       res.send(result);
   })
 
+  // UPDATE FROM MY PRODUCTS
+   app.put('/update-product/:id', async (req, res) => {
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)};
+    const options = {upsert:true};
+    const updatedProduct = req.body;
+    console.log(updatedProduct);
+    const product = {
+        $set:{
+            product_name: updatedProduct.product_name, 
+            product_image: updatedProduct.product_image,
+            product_tags: updatedProduct.product_tags, 
+            external_links: updatedProduct.external_links,
+            description: updatedProduct.description
+        }
+    }
+
+    const result = await productCollection.updateOne(filter, product, options)
+    res.send(result);
+})
+
+
   // ADDING USER TO DATABASE WHEN LOGGING IN
   app.post('/users', async(req, res)=>{
     const user = req.body;
@@ -178,6 +232,14 @@ async function run() {
     const newReview = req.body;
 
     const result = await reviewCollection.insertOne(newReview);
+    res.send(result);
+  })
+
+  // DELETE PRODUCT FROM MY PRODUCT PAGE
+  app.delete('/add-product/:id', async(req, res)=>{
+    const id = req.params.id;
+    const query = {_id:new ObjectId(id)}
+    const result = await productCollection.deleteOne(query);
     res.send(result);
   })
 
