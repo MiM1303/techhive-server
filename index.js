@@ -237,6 +237,22 @@ async function run() {
     res.send(result);
   })
 
+  // ADD PRODUCT FROM ADD PRODUCT PAGE
+  app.post('/add-product', async(req, res)=>{
+    const newProduct = req.body;
+    // console.log(newProduct);
+
+    const result = await productCollection.insertOne(newProduct);
+
+    const updateDoc = {
+      $inc: {product_add_count: 1},
+    }
+    const adderQuery = {user_email: newProduct.owner_email};
+    const updatedProductAddedCount = await userCollection.updateOne(adderQuery, updateDoc);
+    // res.send(result);
+    res.status(200).json(result);
+})
+
   // DELETE PRODUCT FROM MY PRODUCT PAGE
   app.delete('/add-product/:id', async(req, res)=>{
     const id = req.params.id;
