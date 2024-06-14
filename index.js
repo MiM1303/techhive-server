@@ -194,6 +194,21 @@ async function run() {
       res.send(result);
   })
 
+  // UPDATE USER ROLE
+  app.patch('/users/:email', async(req, res)=>{
+    const email = req.params.email;
+    const role = req.query.role;
+    const filter = {user_email: email};
+
+    console.log(role);
+    const updatedDoc = {
+      $set: {'role': role},
+    }
+
+    const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+  })
+
   // UPDATE FROM MY PRODUCTS
    app.put('/update-product/:id', async (req, res) => {
     const id = req.params.id;
