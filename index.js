@@ -78,14 +78,14 @@ async function run() {
 
     // FEATURED SECTION
     app.get('/featured', async(req, res)=>{
-      const result = await productCollection.find({featured:true}).sort({"timestamp":-1}).toArray();
+      const result = await productCollection.find({featured:true, status:"accepted"}).sort({"timestamp":-1}).limit(6).toArray();
       console.log(result);
       res.send(result);
   })
 
     // TRENDING SECTION
     app.get('/trending', async(req, res)=>{
-      const result = await productCollection.find().sort({"upvote_count":-1}).limit(6).toArray();
+      const result = await productCollection.find({status:"accepted"}).sort({"upvote_count":-1}).limit(6).toArray();
       console.log(result);
       res.send(result);
   })
@@ -218,6 +218,15 @@ async function run() {
       res.send(result);
     })
 
+    // MODERATOR APIs
+    // REVIEW QUEUE PAGE SORTED ALL PRODUCTS
+    app.get('/products-review-queue', async(req, res)=>{
+      const result = await productCollection.find().sort({"status":-1}).toArray();
+      res.send(result);
+    })
+
+    
+   
    
 
     // INCREASE VOTE OF PRODUCT
@@ -240,7 +249,7 @@ async function run() {
       const filter = {_id: new ObjectId(id)};
 
       const updatedDoc = {
-          $set: {'reported': "true"},
+          $set: {'reported': true},
       }
     
       const result = await productCollection.updateOne(filter, updatedDoc);
@@ -260,6 +269,45 @@ async function run() {
 
     const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
+  })
+
+  // MAKE FEATURED FROM PRODUCTS REVIEW QUEUE PAGE
+  app.patch('/products/featured/:id', async(req, res)=>{
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)};
+
+    const updatedDoc = {
+        $set: {'featured': true},
+    }
+  
+    const result = await productCollection.updateOne(filter, updatedDoc);
+    res.send(result);
+})
+
+   // ACCEPT PRODUCTS FROM PRODUCTS REVIEW QUEUE PAGE
+   app.patch('/products/accepted/:id', async(req, res)=>{
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)};
+
+    const updatedDoc = {
+        $set: {'status': 'accepted'},
+    }
+  
+    const result = await productCollection.updateOne(filter, updatedDoc);
+    res.send(result);
+})
+
+  // ACCEPT PRODUCTS FROM PRODUCTS REVIEW QUEUE PAGE
+  app.patch('/products/rejected/:id', async(req, res)=>{
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)};
+
+    const updatedDoc = {
+        $set: {'status': 'rejected'},
+    }
+
+    const result = await productCollection.updateOne(filter, updatedDoc);
+    res.send(result);
   })
 
   // UPDATE FROM MY PRODUCTS
