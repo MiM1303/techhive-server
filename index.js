@@ -225,9 +225,13 @@ async function run() {
       res.send(result);
     })
 
-    
+    // REPORTED CONTENTS PAGE
+    app.get('/reported-products', async(req, res)=>{
+      const result = await productCollection.find({'reported':true}).toArray();
+      res.send(result);
+    })
    
-   
+
 
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
