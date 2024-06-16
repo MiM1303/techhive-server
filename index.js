@@ -183,7 +183,7 @@ async function run() {
     })
 
     // GET COUPONS FOR MANAGE COUPONS PAGE ADMIN 
-    app.get('/coupons', verifyToken, verifyAdmin, async(req, res)=>{
+    app.get('/coupons', async(req, res)=>{
       // console.log(req.headers);
       const result = await couponCollection.find().toArray();
       res.send(result);
