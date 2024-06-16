@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -314,6 +315,21 @@ async function run() {
     res.send(result);
   })
 
+  // UPDATE MEMBERSHIP STATUS AFTER PAYMENT FOR SUBSCRIPTION
+  app.patch('/users/payment/:email', async(req, res)=>{
+    const email = req.params.email;
+    const filter = {user_email: email};
+
+    const updatedDoc = {
+      $set: {'membership_status': "Verified"},
+    }
+
+    const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    // const result = await userCollection.findOne({user_email:email});
+    // res.send(result);
+  })
+
   // UPDATE FROM MY PRODUCTS
    app.put('/update-product/:id', async (req, res) => {
     const id = req.params.id;
@@ -372,6 +388,23 @@ async function run() {
     // res.send(result);
     res.status(200).json(result);
 })
+
+    // PAYMENT INTENT
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount, 'amount inside the intent')
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
 
   // DELETE PRODUCT FROM MY PRODUCT PAGE
   app.delete('/add-product/:id', async(req, res)=>{
