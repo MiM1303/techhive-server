@@ -33,6 +33,7 @@ async function run() {
     const productCollection = client.db("techhiveDB").collection("products");
     const reviewCollection = client.db("techhiveDB").collection("reviews");
     const userCollection = client.db("techhiveDB").collection("users");
+    const couponCollection = client.db("techhiveDB").collection("coupons");
 
 
     // JWT
@@ -149,6 +150,7 @@ async function run() {
       res.send({count});
     })
 
+    // ADMIN APIs
     // USER API
     app.get('/users', verifyToken, verifyAdmin, async(req, res)=>{
       // console.log(req.headers);
@@ -180,6 +182,23 @@ async function run() {
       res.send({ admin });
     })
 
+    // GET COUPONS FOR MANAGE COUPONS PAGE ADMIN 
+    app.get('/coupons', verifyToken, verifyAdmin, async(req, res)=>{
+      // console.log(req.headers);
+      const result = await couponCollection.find().toArray();
+      res.send(result);
+    })
+   
+    // GET INDIVIDUAL COUPON FOR EDIT AND DELETE
+    app.get('/coupons/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const query = {_id: new ObjectId(id)}
+      const result = await couponCollection.findOne(query);
+      res.send(result);
+    });
+
+
     // GET PRODUCTS BY EMAIL
     app.get('/products/email/:email', async(req, res)=>{
       const email = req.params.email;
@@ -200,7 +219,7 @@ async function run() {
       console.log(id);
       const query = {_id: new ObjectId(id)}
       const result = await productCollection.findOne(query);
-    res.send(result);
+      res.send(result);
     })
 
     // UPDATE FROM MY PRODUCTS
@@ -231,8 +250,8 @@ async function run() {
       const result = await productCollection.find({'reported':true}).toArray();
       res.send(result);
     })
-   
 
+    
 
     // INCREASE VOTE OF PRODUCT
     app.patch('/products/upvote/:id', async(req, res)=>{
@@ -330,6 +349,26 @@ async function run() {
     // res.send(result);
   })
 
+  // EDIT COUPON FROM MANAGE COUPONS PAGE
+  app.put('/coupons/:id', verifyToken, verifyAdmin, async (req, res) => {
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)};
+    const options = {upsert:true};
+    const updatedCoupon = req.body;
+    const coupon = {
+        $set: {
+          coupon_code: updatedCoupon.coupon_code,
+          expiry_date: updatedCoupon.expiry_date,
+          coupon_code_description: updatedCoupon.coupon_code_description,
+          discount_amount: updatedCoupon.discount_amount,
+    }
+  }
+  
+    const result = await couponCollection.updateOne(filter, coupon, options);
+    res.send(result);
+  })
+  
+
   // UPDATE FROM MY PRODUCTS
    app.put('/update-product/:id', async (req, res) => {
     const id = req.params.id;
@@ -406,11 +445,26 @@ async function run() {
       })
     });
 
+    // ADD COUPON FROM MANAGE COUPONS PAGE
+    app.post('/coupons', verifyToken, verifyAdmin, async (req, res) => {
+      const coupon = req.body;
+      const result = await couponCollection.insertOne(coupon);
+      res.send(result);
+    });
+
   // DELETE PRODUCT FROM MY PRODUCT PAGE
   app.delete('/add-product/:id', async(req, res)=>{
     const id = req.params.id;
     const query = {_id:new ObjectId(id)}
     const result = await productCollection.deleteOne(query);
+    res.send(result);
+  })
+
+  // DELETE COUPON FROM MANAGE COUPON PAGE
+  app.delete('/coupons/:id', async(req, res)=>{
+    const id = req.params.id;
+    const query = {_id:new ObjectId(id)}
+    const result = await couponCollection.deleteOne(query);
     res.send(result);
   })
 
