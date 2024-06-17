@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://tech-hive-d9f7e.web.app/",
+    "https://tech-hive-d9f7e.web.app",
     "https://tech-hive-d9f7e.firebaseapp.com",
   ]
 }));
@@ -78,6 +78,18 @@ async function run() {
       next();
     }
 
+    // use verify moderator after verifyToken
+    const verifyModerator = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { user_email: email };
+      const user = await userCollection.findOne(query);
+      const isModerator = user?.role === 'Moderator';
+      if (!isModerator) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      next();
+    }
+
     // PRODUCTS API
     app.get('/products', async(req, res)=>{
         const result = await productCollection.find().toArray();
@@ -93,7 +105,15 @@ async function run() {
 
     // TRENDING SECTION
     app.get('/trending', async(req, res)=>{
-      const result = await productCollection.find({status:"accepted"}).sort({"upvote_count":-1}).limit(6).toArray();
+      // const result = await productCollection.find({status:"accepted"}).sort({"upvote_count":-1}).limit(6).toArray();
+      const result = await productCollection.find({status:"accepted"}).aggregate([
+        {
+            $addFields: { upvotes_count: {$size: { "$ifNull": [ "$upvotes", [] ] } } }
+        }, 
+        {   
+            $sort: {"upvotes_count":1} 
+        }
+    ]).limit(6).toArray();
       console.log(result);
       res.send(result);
   })
@@ -245,14 +265,31 @@ async function run() {
     })
 
     // MODERATOR APIs
+    // CHECK IF MODERATOR
+    app.get('/users/moderator/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let moderator = false;
+      if (user) {
+        moderator = user?.role === 'Moderator';
+      }
+      res.send({ moderator });
+    })
+
     // REVIEW QUEUE PAGE SORTED ALL PRODUCTS
-    app.get('/products-review-queue', async(req, res)=>{
+    app.get('/products-review-queue', verifyToken, verifyModerator, async(req, res)=>{
       const result = await productCollection.find().sort({"status":-1}).toArray();
       res.send(result);
     })
 
     // REPORTED CONTENTS PAGE
-    app.get('/reported-products', async(req, res)=>{
+    app.get('/reported-products', verifyToken, verifyModerator,  async(req, res)=>{
       const result = await productCollection.find({'reported':true}).toArray();
       res.send(result);
     })
@@ -327,7 +364,7 @@ async function run() {
     res.send(result);
 })
 
-  // ACCEPT PRODUCTS FROM PRODUCTS REVIEW QUEUE PAGE
+  // REJECT PRODUCTS FROM PRODUCTS REVIEW QUEUE PAGE
   app.patch('/products/rejected/:id', async(req, res)=>{
     const id = req.params.id;
     const filter = {_id: new ObjectId(id)};
