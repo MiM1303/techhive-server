@@ -106,15 +106,14 @@ async function run() {
     // TRENDING SECTION
     app.get('/trending', async(req, res)=>{
       // const result = await productCollection.find({status:"accepted"}).sort({"upvote_count":-1}).limit(6).toArray();
-      const result = await productCollection.find({status:"accepted"}).aggregate([
-        {
-            $addFields: { upvotes_count: {$size: { "$ifNull": [ "$upvotes", [] ] } } }
-        }, 
-        {   
-            $sort: {"upvotes_count":1} 
-        }
-    ]).limit(6).toArray();
-      console.log(result);
+      // const result = await productCollection.find({status:"accepted"}).sort({"total_upvotes": 1}).toArray();
+      const result = await productCollection.aggregate([
+        { $match: { status: "accepted" } }, 
+        { $addFields: { upvote_count_size: { $size: "$upvote_count" } } }, 
+        { $sort: { upvote_count_size: -1 } },
+        { $limit: 6 } 
+      ]).toArray();
+      console.log('sorted trending products:');
       res.send(result);
   })
 
